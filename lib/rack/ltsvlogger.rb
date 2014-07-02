@@ -4,9 +4,10 @@ module Rack
   class LtsvLogger
     PID = Process.pid
 
-    def initialize(app, logger=nil)
+    def initialize(app, logger=nil, appends = {})
       @app = app
       @logger = logger || $stdout
+      @appends = appends
     end
 
     def call(env)
@@ -32,6 +33,9 @@ module Rack
         referer: env['HTTP_REFERER'] || "-",
         reqtime: request_time,
       }
+      @appends.each do |key, proc|
+        params[key] = proc.call(env)
+      end
       @logger.write ltsv(params)
 
       [status, headers, body]

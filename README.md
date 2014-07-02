@@ -15,7 +15,7 @@ To measure the processing time accurately, it is necessary to insert a rack midd
 
 Add this line to your application's Gemfile:
 
-    gem 'pfsys-rack-access_log'
+    gem 'rack-ltsvlogger'
 
 And then execute:
 
@@ -48,21 +48,58 @@ run App
 
 ## Format
 
-```
-time:#{time}\tpid:#{pid}\thost:#{ip}size:#{size}\tstatus:#{status}\tmethod:#{method}\turi:#{uri}\treqtime#{reqtime}
-```
-
-Sample:
+Sample (line feeded):
 
 ```
-time:2014-07-01T00:00:00+0900\tpid:1\thost:127.0.0.1\size:10\tstatus:200\tmethod:GET\turi:/api/token\treqtime:0.034617
+time:2014-07-01T00:00:00+0900\tpid:1\thost:127.0.0.1\tvhost:127.0.0.1:80\tforwardedfor:127.0.0.2\t
+size:-\tstatus:200\tmethod:POST\turi:/post\tua:mock\treferer:http://example.com\treqtime:0.0\n
 ```
 
-### Fields
+### Default Fields
 
 * time
 
   * The datetime in ISO-8601 format
+
+* pid
+
+  * Process ID
+
+* host
+
+  * ENV['REMOTE_ADDR']
+
+* vhost
+
+  * ENV['HOST']
+
+* forwardedfor
+
+  * ENV['X_FORWARDED_FOR']
+
+* size
+
+  * Response Content-Length
+
+* status
+
+  * Response Status Code
+
+* method
+
+  * ENV['REQUEST_METHOD']
+
+* uri
+
+  * ENV['PATH_INFO']
+
+* ua
+
+  * ENV['USER_AGENT']
+
+* referer
+
+  * ENV['REFERER']
 
 * reqtime
 
@@ -72,9 +109,17 @@ time:2014-07-01T00:00:00+0900\tpid:1\thost:127.0.0.1\size:10\tstatus:200\tmethod
 
   * See http://ltsv.org/
 
-## ToDo
+### Custom Fields
 
-* Make it possible to add fields
+You may append LTSV fields as:
+
+```ruby
+appends = {
+  vhost: Proc.new {|env| env['HTTP_HOST'] || '-' },
+  forwardedfor: Proc.new {|env| env['HTTP_X_FORWARDED_FOR'] || '-' }
+}
+config.middleware.insert_after(0, Rack::LtsvLogger, $stdout, appends)
+```
 
 ## ChangeLog
 
