@@ -8,14 +8,16 @@ cf. https://speakerdeck.com/mirakui/high-performance-rails-long-edition
 
 <img src="doc/x_runtime.png" alt="x_runtime" width="50%" height="50%"/>
 
-The Completed Time does not include routing time, and elapsed time on rack middleware layers, and so on.
-To measure the processing time accurately, it is necessary to insert a rack middleware to measure the time. 
+The Completed Time which rails default logger shows does not include routing time,
+and elapsed time on rack middleware layers, and so on.
+To measure the processing time accurately,
+it is necessary to insert a rack middleware at the head of rack middleware stacks.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'rack-ltsvlogger'
+    gem 'rack-ltsv_logger'
 
 And then execute:
 
