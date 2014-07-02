@@ -1,0 +1,6 @@
+source "http://rubygems.org"
+
+gem 'sinatra'
+gem 'rack-ltsvlogger', path: '../..'
+gem 'pry'
+gem 'pry-nav'

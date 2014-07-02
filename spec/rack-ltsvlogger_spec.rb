@@ -27,14 +27,26 @@ describe Rack::LtsvLogger do
       Rack::Lint.new( Rack::LtsvLogger.new(app, @test_io) )
     end
 
+    let(:env) do
+      {
+        'REMOTE_ADDR' => '127.0.0.1',
+        'HTTP_HOST' => '127.0.0.1:80',
+        'HTTP_X_FORWARDED_FOR' => '127.0.0.2',
+        'HTTP_USER_AGENT' => 'mock',
+        'HTTP_REFERER' => 'http://example.com',
+      }
+    end
+
     it 'GET /get?foo' do
-      Rack::MockRequest.new(subject).get('/get?foo')
-      expect(@test_io.string).to eq "time:#{now}\tpid:#{pid}\thost:#{host_ip}\tsize:17\tstatus:200\tmethod:GET\turi:/get\treqtime:0.0\n"
+      Rack::MockRequest.new(subject).get('/get?foo', env)
+      expect(@test_io.string).to eq "time:#{now}\tpid:#{pid}\thost:127.0.0.1\tvhost:127.0.0.1:80\tforwardedfor:127.0.0.2" +
+        "\tsize:-\tstatus:200\tmethod:GET\turi:/get\tua:mock\treferer:http://example.com\treqtime:0.0\n"
     end
 
     it 'POST /post' do
-      Rack::MockRequest.new(subject).post('/post')
-      expect(@test_io.string).to eq "time:#{now}\tpid:#{pid}\thost:#{host_ip}\tsize:17\tstatus:200\tmethod:POST\turi:/post\treqtime:0.0\n"
+      Rack::MockRequest.new(subject).post('/post', env)
+      expect(@test_io.string).to eq "time:#{now}\tpid:#{pid}\thost:127.0.0.1\tvhost:127.0.0.1:80\tforwardedfor:127.0.0.2" +
+        "\tsize:-\tstatus:200\tmethod:POST\turi:/post\tua:mock\treferer:http://example.com\treqtime:0.0\n"
     end
   end
 end

@@ -1,7 +1,6 @@
 require 'bundler'
 Bundler.setup(:default, :test)
 Bundler.require(:default, :test)
-require 'timecop'
 
 #require 'simplecov'
 #require 'simplecov-rcov'
@@ -10,4 +9,6 @@ require 'timecop'
 
 $TESTING=true
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib/rack/')
+require 'timecop'
+require 'rack'
 require 'rack-ltsvlogger'

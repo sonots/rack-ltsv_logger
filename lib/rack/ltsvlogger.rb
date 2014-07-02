@@ -1,9 +1,7 @@
-require 'socket'
 require 'time'
 
 module Rack
   class LtsvLogger
-    HOST_IP = Socket.getaddrinfo(Socket::gethostname, nil, Socket::AF_INET)[0][3]
     PID = Process.pid
 
     def initialize(app, logger=nil)
@@ -23,11 +21,15 @@ module Rack
       params = {
         time: time,
         pid: PID,
-        host: HOST_IP,
-        size: body.to_s.bytesize,
+        host: env['REMOTE_ADDR'] || "-",
+        vhost: env['HTTP_HOST'] || "-",
+        forwardedfor: env['HTTP_X_FORWARDED_FOR'] || "-",
+        size: extract_content_length(headers),
         status: status,
-        method: env['REQUEST_METHOD'],
-        uri: env['PATH_INFO'],
+        method: env['REQUEST_METHOD'] || "-",
+        uri: env['PATH_INFO'] || "-",
+        ua: env['HTTP_USER_AGENT'] || "-",
+        referer: env['HTTP_REFERER'] || "-",
         reqtime: request_time,
       }
       @logger.write ltsv(params)
@@ -39,6 +41,11 @@ module Rack
 
     def ltsv(hash)
       hash.map {|k, v| "#{k}:#{v}" }.join("\t") + "\n"
+    end
+
+    def extract_content_length(headers)
+      value = headers['Content-Length'] or return '-'
+      value.to_s == '0' ? '-' : value
     end
   end
 end
