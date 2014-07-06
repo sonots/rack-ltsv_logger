@@ -29,20 +29,18 @@ Insert Rack::LtsvLogger on the head of rack middlewares.
 
 Rails)
 
-Add following to config/environments/[env].rb
-
 ```ruby
-require 'rack/ltsvlogger'
-require 'logger'
-
-config.middleware.insert_after(0, Rack::LtsvLogger, $stdout)
+# config/environments/[env].rb
+Rails.application.configure do
+  config.middleware.insert_after(0, Rack::LtsvLogger, $stdout)
+end
 ```
 
 Sinatra)
 
 ```ruby
 # config.ru
-require 'rack/ltsvlogger'
+require 'rack/ltsv_logger'
 
 use Rack::LtsvLogger, $stdout
 run App
