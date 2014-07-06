@@ -8,8 +8,8 @@ cf. https://speakerdeck.com/mirakui/high-performance-rails-long-edition
 
 <img src="doc/x_runtime.png" alt="x_runtime" width="50%" height="50%"/>
 
-The Completed Time which rails default logger shows does not include routing time,
-and elapsed time on rack middleware layers, and so on.
+The Completed Time, which the default logger of rails shows,
+does not include the routing time, and the elapsed time on rack middleware layers.
 To measure the processing time accurately,
 it is necessary to insert a rack middleware at the head of rack middleware stacks.
 
