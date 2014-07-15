@@ -27,16 +27,22 @@ And then execute:
 
 Insert Rack::LtsvLogger on the head of rack middlewares. 
 
-Rails)
+### Rails
 
 ```ruby
-# config/environments/[env].rb
-Rails.application.configure do
+# config/application.rb
+class Application < Rails::Application
   config.middleware.insert_after(0, Rack::LtsvLogger, $stdout)
 end
 ```
 
-Sinatra)
+Middleware check.
+
+```
+bundle exec rake middleware
+```
+
+### Sinatra
 
 ```ruby
 # config.ru
