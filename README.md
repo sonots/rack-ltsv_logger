@@ -54,11 +54,21 @@ run App
 
 ## Format
 
-Sample (line feeded):
+Sample (line feeded, but actually tab seperated):
 
 ```
-time:2014-07-02T21:52:31+09:00  pid:15189       host:127.0.0.1  forwardedfor:127.0.0.2  user:user
-method:GET      uri:/get        query:?foo      protocol:HTTP/1.1       status:200      size:-  reqtime:0.000000
+time:2014-07-02T21:52:31+09:00
+pid:15189
+host:127.0.0.1
+forwardedfor:127.0.0.2
+user:user
+method:GET
+uri:/get
+query:?foo
+protocol:HTTP/1.1
+status:200
+size:-
+reqtime:0.000000
 ```
 
 ### Default Fields
