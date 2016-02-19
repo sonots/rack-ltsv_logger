@@ -14,7 +14,7 @@ module Rack
       began_at = Time.now.instance_eval { to_i + (usec/1000000.0) }
 
       status, headers, body = @app.call(env)
-
+    ensure
       now = Time.now
       reqtime = now.instance_eval { to_i + (usec/1000000.0) } - began_at
 
@@ -47,7 +47,7 @@ module Rack
     end
 
     def extract_content_length(headers)
-      value = headers['Content-Length'] or return '-'
+      value = headers && headers['Content-Length'] or return '-'
       value.to_s == '0' ? '-' : value
     end
   end
