@@ -8,6 +8,12 @@ describe Rack::LtsvLogger do
     }
   end
 
+  def error_app
+    lambda { |env|
+      raise ArgumentError, "error test"
+    }
+  end
+
   def parse_ltsv(ltsv)
     Hash[*(ltsv.chomp.split("\t").map {|e| e.split(":", 2) }.flatten)]
   end
@@ -67,6 +73,27 @@ describe Rack::LtsvLogger do
     it 'GET /get' do
       Rack::MockRequest.new(subject).get('/get', env)
       params = parse_ltsv(@output.string)
+      expect(params['x_runtime']).to eq('1.234')
+    end
+  end
+
+  context 'when app error occured' do
+    let(:appends) do
+      { x_runtime: Proc.new {|env| '1.234' } }
+    end
+
+    subject do
+      @output = StringIO.new
+      Rack::Lint.new( Rack::LtsvLogger.new(error_app, @output, appends) )
+    end
+
+    it 'GET /get' do
+      expect {
+        Rack::MockRequest.new(subject).get('/get', env)
+      }.to raise_error ArgumentError
+
+      params = parse_ltsv(@output.string)
+      expect(params).not_to be_empty
       expect(params['x_runtime']).to eq('1.234')
     end
   end
