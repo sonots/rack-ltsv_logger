@@ -95,6 +95,7 @@ describe Rack::LtsvLogger do
       params = parse_ltsv(@output.string)
       expect(params).not_to be_empty
       expect(params['x_runtime']).to eq('1.234')
+      expect(params['status']).to eq('500')
     end
   end
 end
