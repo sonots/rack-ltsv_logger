@@ -14,7 +14,7 @@ module Rack
       began_at = Time.now.instance_eval { to_i + (usec/1000000.0) }
 
       status, headers, body = @app.call(env)
-
+    ensure
       now = Time.now
       reqtime = now.instance_eval { to_i + (usec/1000000.0) } - began_at
 
@@ -28,7 +28,7 @@ module Rack
         uri: env["PATH_INFO"],
         query: env["QUERY_STRING"].empty? ? "" : "?"+env["QUERY_STRING"],
         protocol: env["HTTP_VERSION"],
-        status: status.to_s[0..3],
+        status: extract_status(status),
         size: extract_content_length(headers),
         reqtime: "%0.6f" % reqtime,
       }
@@ -47,8 +47,12 @@ module Rack
     end
 
     def extract_content_length(headers)
-      value = headers['Content-Length'] or return '-'
+      value = headers && headers['Content-Length'] or return '-'
       value.to_s == '0' ? '-' : value
+    end
+
+    def extract_status(status)
+      status.nil? ? "500" : status.to_s[0..3]
     end
   end
 end
