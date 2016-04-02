@@ -2,8 +2,6 @@ require 'time'
 
 module Rack
   class LtsvLogger
-    PID = Process.pid
-
     def initialize(app, logger=nil, appends = {})
       @app = app
       @logger = logger || $stdout
@@ -20,7 +18,7 @@ module Rack
 
       params = {
         time: now.iso8601,
-        pid: PID,
+        pid: Process.pid,
         host: env["REMOTE_ADDR"] || "-",
         forwardedfor: env['HTTP_X_FORWARDED_FOR'] || "-",
         user: env["REMOTE_USER"] || "-",
