@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "rack-ltsv_logger"
-  spec.version       = "0.0.2"
+  spec.version       = "0.0.3"
   spec.authors       = ["Naotoshi Seo"]
   spec.email         = ["sonots@gmail.com"]
   spec.description   = %q{A rack middleware to output access log in ltsv format}
