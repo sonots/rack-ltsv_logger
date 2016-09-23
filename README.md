@@ -125,9 +125,31 @@ reqtime:0.000000
 
   * See http://ltsv.org/
 
+## Arguments
+
+* logger
+  * An IO object, or something which has `#write` method
+* appends
+  * A Hash object to append custom fields. See [#custom-fields](#custom-fields)
+
+### Log Rotation
+
+If you utilize log rotation functionality of Ruby's standard logger, you may write as
+
+```ruby
+class MyLogger < ::Logger
+  def write(msg)
+    @logdev.write msg
+  end
+end
+
+logger = MyLogger.new('/path/to/access.log', 3, 1048576)
+config.middleware.insert_after(0, Rack::LtsvLogger, logger)
+```
+
 ### Custom Fields
 
-You may append LTSV fields as:
+If you want to append LTSV fields, write as
 
 ```ruby
 appends = {
