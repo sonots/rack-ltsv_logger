@@ -42,7 +42,7 @@ describe Rack::LtsvLogger do
     Timecop.return
   end
 
-  context 'ltsv' do
+  context 'default ltsv' do
     subject do
       @output = StringIO.new
       Rack::Lint.new( Rack::LtsvLogger.new(app, @output) )
@@ -60,7 +60,31 @@ describe Rack::LtsvLogger do
     end
   end
 
-  context 'appends' do
+  context 'custom fields' do
+    let(:params_proc) do
+      Proc.new do |env, status, headers, body, began_at|
+        params = Rack::LtsvLogger::DEFAULT_PARAMS_PROC.call(env, status, headers, body, began_at)
+        params.delete(:protocol)
+        params.merge!(
+          new_protocol: env['HTTP_VERSION'],
+        )
+      end
+    end
+
+    subject do
+      @output = StringIO.new
+      Rack::Lint.new( Rack::LtsvLogger.new(app, @output, params_proc: params_proc) )
+    end
+
+    it 'GET /get' do
+      Rack::MockRequest.new(subject).get('/get', env)
+      params = parse_ltsv(@output.string)
+      expect(params['protocol']).to be_nil
+      expect(params['new_protocol']).to eq(protocol)
+    end
+  end
+
+  context 'appends (deprecated)' do
     let(:appends) do
       { x_runtime: Proc.new {|env| '1.234' } }
     end
@@ -75,7 +99,7 @@ describe Rack::LtsvLogger do
       params = parse_ltsv(@output.string)
       expect(params['x_runtime']).to eq('1.234')
     end
-  end
+  end 
 
   context 'when app error occured' do
     let(:appends) do

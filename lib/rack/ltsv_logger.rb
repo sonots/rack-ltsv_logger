@@ -2,21 +2,10 @@ require 'time'
 
 module Rack
   class LtsvLogger
-    def initialize(app, logger=nil, appends = {})
-      @app = app
-      @logger = logger || $stdout
-      @appends = appends
-    end
-
-    def call(env)
-      began_at = Time.now.instance_eval { to_i + (usec/1000000.0) }
-
-      status, headers, body = @app.call(env)
-    ensure
+    DEFAULT_PARAMS_PROC = Proc.new do |env, status, headers, body, began_at|
       now = Time.now
       reqtime = now.instance_eval { to_i + (usec/1000000.0) } - began_at
-
-      params = {
+      {
         time: now.iso8601,
         pid: Process.pid,
         host: env["REMOTE_ADDR"] || "-",
@@ -26,31 +15,41 @@ module Rack
         uri: env["PATH_INFO"],
         query: env["QUERY_STRING"].empty? ? "" : "?"+env["QUERY_STRING"],
         protocol: env["HTTP_VERSION"],
-        status: extract_status(status),
-        size: extract_content_length(headers),
+        status: ::Rack::LtsvLogger.extract_status(status),
+        size: ::Rack::LtsvLogger.extract_content_length(headers),
         reqtime: "%0.6f" % reqtime,
       }
-      @appends.each do |key, proc|
-        params[key] = proc.call(env)
-      end
-      @logger.write ltsv(params)
+    end
 
-      [status, headers, body]
+    def initialize(app, io = nil, **kwargs)
+      @app = app
+      @io = io || $stdout
+      @params_proc = kwargs[:params_proc] || DEFAULT_PARAMS_PROC
+      @appends = kwargs.tap {|h| h.delete(:params_proc) } # old version compatibility
+    end
+
+    def call(env)
+      began_at = Time.now.instance_eval { to_i + (usec/1000000.0) }
+      status, headers, body = @app.call(env)
+    ensure
+      params = @params_proc.call(env, status, headers, body, began_at)
+      @appends.each {|key, proc| params[key] = proc.call(env) } # old version compatibility
+      @io.write ltsv(params)
+    end
+
+    def self.extract_content_length(headers)
+      value = headers && headers['Content-Length'] or return '-'
+      value.to_s == '0' ? '-' : value
+    end
+
+    def self.extract_status(status)
+      status.nil? ? "500" : status.to_s[0..3]
     end
 
     private
 
     def ltsv(hash)
       hash.map {|k, v| "#{k}:#{v}" }.join("\t") + "\n"
-    end
-
-    def extract_content_length(headers)
-      value = headers && headers['Content-Length'] or return '-'
-      value.to_s == '0' ? '-' : value
-    end
-
-    def extract_status(status)
-      status.nil? ? "500" : status.to_s[0..3]
     end
   end
 end

@@ -73,64 +73,35 @@ reqtime:0.000000
 
 ### Default Fields
 
-* time
+| key          | value                                                                          |
+|--------------|--------------------------------------------------------------------------------|
+| time         | The datetime in ISO-8601 format                                                |
+| pid          | Procedd ID                                                                     |
+| host         | ENV['REMOTE_ADDR']                                                             |
+| forwardedfor | ENV['X_FORWARDED_FOR']                                                         |
+| user         | ENV['REMOTE_USER']                                                             |
+| method       | ENV['REQUEST_METHOD']                                                          |
+| uri          | ENV['PATH_INFO']                                                               |
+| query        | ENV['QUERY_STRING']                                                            |
+| protocol     | ENV['HTTP_VERSION']                                                            |
+| status       | Response Status Code                                                           |
+| size         | Response Content-Length                                                        |
+| reqtime      | The request time in secods. milli seconds are written after the decimal point. |
 
-  * The datetime in ISO-8601 format
-
-* pid
-
-  * Process ID
-
-* host
-
-  * ENV['REMOTE_ADDR']
-
-* forwardedfor
-
-  * ENV['X_FORWARDED_FOR']
-
-* user
-
-  * ENV['REMOTE_USER']
-
-* method
-
-  * ENV['REQUEST_METHOD']
-
-* uri
-
-  * ENV['PATH_INFO']
-
-* query
-
-  * ENV['QUERY_STRING']
-
-* protocol
-
-  * ENV['HTTP_VERSION']
-
-* status
-
-  * Response Status Code
-
-* size
-
-  * Response Content-Length
-
-* reqtime
-
-  * The request time in secods. milli seconds are written after the decimal point. 
-
-* Others
-
-  * See http://ltsv.org/
 
 ## Arguments
 
-* logger
+Arguments:
+
+* io
   * An IO object, or something which has `#write` method
-* appends
-  * A Hash object to append custom fields. See [#custom-fields](#custom-fields)
+* ~~appends (deprecated)~~
+  * ~~A Hash object to append custom fields. See [#custom-fields](#custom-fields)~~
+
+Keyword Arguments:
+
+* params\_proc
+  * A Proc object to generate fields. See [#custom-fields](#custom-fields)
 
 ### Log Rotation
 
@@ -149,7 +120,50 @@ config.middleware.insert_after(0, Rack::LtsvLogger, logger)
 
 ### Custom Fields
 
-If you want to append LTSV fields, write as
+Pass a proc object to customize fields as:
+
+```ruby
+params_proc = Proc.new do |env, status, headers, body, began_at|
+  params = Rack::LtsvLogger::DEFAULT_PARAMS_PROC.call(env, status, headers, body, began_at)
+  params.delete(:protocol)
+  params.merge!(
+    vhost: env['HTTP_HOST'] || "-",
+    ua: env['HTTP_USER_AGENT'] || "-",
+    referer: env['HTTP_REFERER'] || "-",
+  )
+end
+config.middleware.insert_after(0, Rack::LtsvLogger, $stdout, params_proc: params_proc)
+```
+
+or
+
+```ruby
+params_proc = Proc.new do |env, status, headers, body, began_at|
+  now = Time.now
+  reqtime = now.instance_eval { to_i + (usec/1000000.0) } - began_at
+  {
+    time: now.iso8601,
+    pid: Process.pid,
+    host: env["REMOTE_ADDR"] || "-",
+    forwardedfor: env['HTTP_X_FORWARDED_FOR'] || "-",
+    user: env["REMOTE_USER"] || "-",
+    method: env["REQUEST_METHOD"],
+    uri: env["PATH_INFO"],
+    query: env["QUERY_STRING"].empty? ? "" : "?"+env["QUERY_STRING"],
+    status: ::Rack::LtsvLogger.extract_status(status),
+    size: ::Rack::LtsvLogger.extract_content_length(headers),
+    reqtime: "%0.6f" % reqtime,
+    vhost: env['HTTP_HOST'] || "-",
+    ua: env['HTTP_USER_AGENT'] || "-",
+    referer: env['HTTP_REFERER'] || "-",
+  }
+end
+config.middleware.insert_after(0, Rack::LtsvLogger, $stdout, params_proc: params_proc)
+```
+
+I recommend to follow http://ltsv.org/ to add new key names.
+
+**Deprecated**
 
 ```ruby
 appends = {
