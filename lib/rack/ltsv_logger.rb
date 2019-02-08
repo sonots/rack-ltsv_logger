@@ -43,7 +43,7 @@ module Rack
     end
 
     def self.extract_status(status)
-      status.nil? ? "500" : status.to_s[0..3]
+      status.nil? ? "500" : status.to_s[0..2]
     end
 
     private
