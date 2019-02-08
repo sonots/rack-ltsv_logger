@@ -122,4 +122,20 @@ describe Rack::LtsvLogger do
       expect(params['status']).to eq('500')
     end
   end
+
+  context 'when app returns invalid http status code' do
+    subject do
+      @output = StringIO.new
+      invalid_status_code_app = lambda do |env|
+        [2000, {'Content-Type' => 'text/plain'}, ["Hello, World!"]]
+      end
+      Rack::Lint.new( Rack::LtsvLogger.new(invalid_status_code_app, @output) )
+    end
+
+    it 'GET /get' do
+      Rack::MockRequest.new(subject).get('/get', env)
+      params = parse_ltsv(@output.string)
+      expect(params['status']).to eq '200'
+    end
+  end
 end
