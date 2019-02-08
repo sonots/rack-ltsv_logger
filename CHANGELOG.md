@@ -1,3 +1,9 @@
+## 0.1.1  (2019/02/08)
+
+Fixes:
+
+* Status field includes exactly 3 chracters (thanks to SpringMT)
+
 ## 0.1.0  (2017/11/26)
 
 Enhancements:
